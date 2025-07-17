@@ -3,6 +3,20 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+class DQNNet(nn.Module):
+    def __init__(self, state_shape, action_size):
+        super(DQNNet, self).__init__()
+        input_dim = np.prod(state_shape) 
+        hidden_dim = 1000
+        self.fc1 = nn.Linear(input_dim, hidden_dim)
+        self.relu = nn.ReLU()
+        self.fc2 = nn.Linear(hidden_dim, action_size)
+    def forward(self, x):
+        x = x.view(x.size(0), -1)
+        x = self.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x
+
 class Agent:
     def __init__(self, state_shape, action_size, config):
         """Initialize agent with networks and replay buffer"""
