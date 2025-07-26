@@ -48,8 +48,10 @@ class BreakoutEnv:
         for i in range(4):
             for _ in range(self.frame_skip):
                 obs, reward, done, truncated, info = self.env.step(agent_action)
-                total_reward += reward
-
+                if reward==0:
+                    total_reward += reward
+                else:
+                    total_reward += 1
                 
                 # If the episode is done, break out of the loop.
                 if done or truncated:

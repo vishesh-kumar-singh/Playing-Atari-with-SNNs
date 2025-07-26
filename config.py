@@ -1,6 +1,6 @@
 config = {
     "dqn": {
-        "training_length": 30000,  # episodes
+        "training_length": 3000,  # episodes
         "mini_batch_size": 32,
         "replay_memory_size": 200000,
         "replay_memory_init_size": 50000,
@@ -32,5 +32,8 @@ config = {
     "adaptive_threshold": {
         "theta_plus": 0.05,
         "theta_decay": 1e-7
-    }
+    },
+    
+
+    "logging_interval":50
 }
