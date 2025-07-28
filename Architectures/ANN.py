@@ -13,10 +13,9 @@ def set_device():
         return torch.device("cpu")
 
 class DQNNet(nn.Module):
-    def __init__(self, state_shape, action_size):
+    def __init__(self, input_dim: int= 80 * 80, action_size: int = 4):
         super(DQNNet, self).__init__()
         self.device = set_device()
-        input_dim = np.prod(state_shape) 
         hidden_dim = 1000
         self.fc1 = nn.Linear(input_dim, hidden_dim)
         self.relu = nn.ReLU()

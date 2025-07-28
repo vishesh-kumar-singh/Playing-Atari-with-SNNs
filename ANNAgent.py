@@ -27,12 +27,11 @@ def MSELoss(policy_net, target_net, states, actions,
 class ANNAgent:
     def __init__(self, state_shape, action_size, config=config):
         """Initialize agent with networks and replay buffer"""
-        self.state_shape = state_shape
         self.action_size = action_size
 
-        self.policy_net = DQNNet(state_shape, action_size)
+        self.policy_net = DQNNet(input_dim=80*80,action_size=action_size)
         self.policy_net.to(self.policy_net.device)
-        self.target_net = DQNNet(state_shape, action_size)
+        self.target_net = DQNNet(input_dim=80*80, action_size=action_size)
         self.target_net.to(self.target_net.device)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.replay_buffer= ReplayBuffer(capacity=config["dqn"]["replay_memory_size"], state_dim=state_shape)
@@ -43,10 +42,13 @@ class ANNAgent:
             self.policy_net.parameters(),
             lr=config['dqn']['learning_rate'],
             momentum=config['dqn']['gradient_momentum'],
+            alpha=config['dqn']['squared_gradient_momentum'],
+            eps=config['dqn']['min_squared_gradient']
         )
         self.step_count = 0
         self.batch_size = config['dqn']['mini_batch_size']
         self.gamma = config['dqn']['discount_factor']
+        self.memory_init_size=config['dqn']['replay_memory_init_size']
 
     def select_action(self, state: np.ndarray) -> int:
         """Epsilon-greedy action selection"""
@@ -61,14 +63,22 @@ class ANNAgent:
     def train_dqn_step(self):
         device = self.policy_net.device
 
-        if len(self.replay_buffer) < self.batch_size:
+        self.step_count += 1
+        if len(self.replay_buffer) < self.memory_init_size:
+            self.update_epsilon()  # Still decay epsilon each step
+            return None
+        
+        if self.step_count % config['dqn']['update_frequency'] != 0:
+            self.update_epsilon()  # Still decay epsilon each step
             return None
 
         # Sample from replay buffer
         states, actions, rewards, next_states, dones = self.replay_buffer.sample(self.batch_size)
 
         states = torch.tensor(np.array(states), dtype=torch.float32).to(device)
+
         next_states = torch.tensor(np.array(next_states), dtype=torch.float32).to(device)
+        
         actions = actions if torch.is_tensor(actions) else torch.tensor(actions, dtype=torch.long)
         actions = actions.view(-1, 1).to(device)
 
@@ -82,11 +92,12 @@ class ANNAgent:
 
         # Compute and apply loss
         loss, td_error = MSELoss(self.policy_net, self.target_net, states, actions, rewards, next_states, dones, self.gamma)
+        
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
 
-        self.step_count += 1
+
         self.update_epsilon()
 
         if self.step_count % config['dqn']['target_network_update_frequency'] == 0:
@@ -106,7 +117,7 @@ class ANNAgent:
     def update_target_network(self):
         """Update target network with policy network weights"""
         self.target_net.load_state_dict(self.policy_net.state_dict())
-        
+
     def save_model(self, filepath: str="model_weights.pth"):
         """Save model weights to file"""
         # Save the policy network state dictionary to the specified filepath.

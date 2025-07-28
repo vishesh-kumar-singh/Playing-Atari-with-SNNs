@@ -6,7 +6,7 @@ from collections import deque
 from tqdm import tqdm
 
 
-def train_agent(agent, env, num_episodes=config["dqn"]["training_length"], max_steps_per_episode=500):
+def train_agent(agent, env):
 
     rewards_per_episode = []
     mean_scores = []
@@ -21,19 +21,29 @@ def train_agent(agent, env, num_episodes=config["dqn"]["training_length"], max_s
 
             while True:
                 action = agent.select_action(state)
-                next_state, reward, done, _, info = env.step(action)
+                reward=0
+
+
+                next_state, r, done, _, info = env.step(action)
+                reward+=r
 
                 agent.replay_buffer.push(state, action, reward, next_state, done)
                 loss = agent.train_dqn_step()
 
-                state = next_state
-                episode_reward += reward
+                if agent.step_count ==10:
+                    env.save_sample_binary_frame()
+                    env.save_sample_greyscale_frame()
                 if loss:
                     episode_loss.append(loss)
+                if done:
+                    break
+                state = next_state
+                episode_reward += reward
 
                 if done:
                     break
 
+            
             rewards_per_episode.append(episode_reward)
             # Monitor training progress with comprehensive logging and statistics.
             scores_window.append(episode_reward)
@@ -44,7 +54,7 @@ def train_agent(agent, env, num_episodes=config["dqn"]["training_length"], max_s
             losses.append(avg_loss)
 
 
-        print(f"Episode {(i+1)*config['logging_interval']} | Reward: {episode_reward:.2f} | "
-          f"Mean Score: {mean_score:.2f} | Loss: {avg_loss:.4f}")
+        print(f"Episode {(i+1)*config['logging_interval']} | Episode Reward: {episode_reward:.2f} | "
+          f"Mean Score: {mean_score:.2f} | Average Loss: {avg_loss:.4f} | Step Count : {agent.step_count} \n")
 
     return agent, rewards_per_episode, mean_scores, losses

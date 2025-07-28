@@ -35,5 +35,5 @@ config = {
     },
     
 
-    "logging_interval":50
+    "logging_interval":100
 }
