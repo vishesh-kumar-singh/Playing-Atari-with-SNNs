@@ -2,7 +2,7 @@ import numpy as np
 from typing import Tuple
 import gym as gym
 from gym import spaces
-from Image_Processing import FrameStack
+from Image_Processing import FrameStack, poisson_spike_encoding
 import ale_py
 import os
 from config import config
@@ -12,7 +12,7 @@ os.environ["__NV_PRIME_RENDER_OFFLOAD"] = "1"
 os.environ["__GLX_VENDOR_LIBRARY_NAME"] = "nvidia"
 
 class BreakoutEnv:
-    def __init__(self, env_name: str = "BreakoutNoFrameskip-v4", frame_skip: int = config['dqn']['frame_skip'],rendering_mode: str = "rgb_array", processing_method: str ="Binary"):
+    def __init__(self, env_name: str = "BreakoutNoFrameskip-v4", frame_skip: int = config['dqn']['frame_skip'],rendering_mode: str = "rgb_array", processing_method: str ="Binary", is_SNN=False):
         """Initialize environment and frame stack"""
         # Create the Gym environment and frame stack manager.
         self.env = gym.make(env_name,render_mode=rendering_mode,frameskip=frame_skip)
@@ -25,6 +25,7 @@ class BreakoutEnv:
         self.frame_skip = frame_skip
         self.processing_method = processing_method
         self.frame_stack = FrameStack()
+        self.is_SNN = is_SNN
     
     def reset(self) -> np.ndarray:
         """Reset environment and return initial stacked state"""
@@ -40,6 +41,9 @@ class BreakoutEnv:
             self.state = self.frame_stack.get_greyscale()
         else:
             raise ValueError(f"Unknown processing method: {self.processing_method}")
+
+        if self.is_SNN:
+            self.state= poisson_spike_encoding(self.state[None,:], time_steps=config['snn']['time_steps'])[0]
 
         # Return the properly formatted state for the agent.
         return self.state
@@ -69,6 +73,11 @@ class BreakoutEnv:
             self.state = self.frame_stack.get_binary()
         elif self.processing_method == "Greyscale":
             self.state = self.frame_stack.get_greyscale()
+
+        if self.is_SNN:
+            flat_state = self.state.flatten()[None, :]  # shape: (1, 6400)
+
+            self.state= poisson_spike_encoding(self.state[None,:], time_steps=config['snn']['time_steps'])[0]
 
 
         # Return the new state, total reward, done flag, truncated, and info.

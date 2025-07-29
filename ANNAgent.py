@@ -25,7 +25,7 @@ def MSELoss(policy_net, target_net, states, actions,
 
 
 class ANNAgent:
-    def __init__(self, state_shape, action_size, config=config):
+    def __init__(self, state_shape,action_size, config=config):
         """Initialize agent with networks and replay buffer"""
         self.action_size = action_size
 

@@ -7,7 +7,7 @@ from config import config
 
 env = BreakoutEnv(rendering_mode='rgb_array',processing_method="Greyscale")
 state=env.reset()
-state_shape = state.shape
+state_shape=state.shape
 action_size = env.action_space.n
 agent=ANNAgent(state_shape=state_shape,action_size=action_size)
 

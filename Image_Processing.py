@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 from collections import deque
 
-def poisson_spike_encoding(images, time_steps=100):
+def poisson_spike_encoding(images, time_steps=config['snn']['time_steps']):
     return (np.random.rand(images.shape[0], time_steps, 80*80) < images[:, None, :]).astype(np.uint8)
 
 class FrameStack():
@@ -47,7 +47,7 @@ class FrameStack():
             stacked += frame
 
         stacked[stacked > 0] = 1.0
-        return stacked
+        return stacked.flatten()[None, :]
 
     def get_greyscale(self):
         frames = list(self.deque_of_frames)
@@ -71,7 +71,7 @@ class FrameStack():
             stacked+= (frame0 > 0).astype(np.float32) * weights[-1]
         else:
             stacked = (frame0 > 0).astype(np.float32)
-        return stacked
+        return stacked.flatten()[None, :]
     
     def reset(self) -> None:
         """Clear the deque"""
