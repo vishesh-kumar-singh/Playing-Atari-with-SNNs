@@ -1,11 +1,11 @@
 config = {
     
-    "training_length": 400,  # episodes
-    "mini_batch_size": 32,
-    "replay_memory_size": 2000,
-    "replay_memory_init_size": 500,
+    "training_length": 4000,  # episodes
+    "mini_batch_size": 64,
+    "replay_memory_size": 200000,
+    "replay_memory_init_size": 50000,
     "agent_history_length": 4,
-    "target_network_update_frequency": 100,
+    "target_network_update_frequency": 10000,
     "discount_factor": 0.99,  # gamma
     "frame_skip": 3,
     "action_repeat": 4,
@@ -17,7 +17,7 @@ config = {
     "min_squared_gradient": 0.01,
     "initial_epsilon": 1.0,
     "final_epsilon": 0.1,
-    "final_exploration_step": 2000,
+    "final_exploration_step": 200000,
     "refractory_period": 0,  # in ms
     "threshold_voltage": -52,
     "resting_voltage": -65,
